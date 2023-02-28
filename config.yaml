@@ -11,4 +11,5 @@ integrations:
     pip_install: -r requirements.txt
 
 command: |
+  cd bestcp
   python test_bestcp.py

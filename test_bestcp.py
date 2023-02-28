@@ -5,39 +5,59 @@ from composer import Trainer
 from composer.models import mnist_model
 from composer.loggers import InMemoryLogger
 from composer.callbacks import CheckpointSaver
-import os 
-import tempfile
-from composer.utils import is_model_deepspeed
-from composer.utils.file_helpers import create_symlink_file, format_name_with_dist, format_name_with_dist_and_time, is_tar
-from composer.loggers import ObjectStoreLogger, Logger
-from composer.utils.object_store import S3ObjectStore
+from composer.utils import (parse_uri)
+from pathlib import Path
+from typing import Callable, Optional, Union
+from composer.core import (Event, State, Time)
 
 class BestCheckpointSaver(CheckpointSaver):
     def __init__(
         self,
         metric_name='metrics/eval/Accuracy',
-        maximize = True,
-        folder = '{run_name}/checkpoints',
-        filename = 'ep{epoch}-ba{batch}-rank{rank}.pt',
-        artifact_name = '{run_name}/checkpoints/ep{epoch}-ba{batch}-rank{rank}',
-        latest_filename = 'latest-rank{rank}.pt',
-        latest_artifact_name = '{run_name}/checkpoints/latest-rank{rank}',
-        save_interval = '1ep',
-        overwrite = False,
-        num_checkpoints_to_keep = -1,
-        weights_only = False,
+        maximize=True,
+        save_folder: Optional[str] = None,
+        save_filename: str = 'ep{epoch}-ba{batch}-rank{rank}.pt',
+        save_latest_filename: Optional[str] = 'latest-rank{rank}.pt',
+        save_overwrite: bool = False,
+        save_interval: Union[str, int, Time, Callable[[State, Event], bool]] = '1ep',
+        save_weights_only: bool = False,
+        save_num_checkpoints_to_keep: int = -1,
         best_filename = 'best-rank{rank}.pt',
         best_artifact_name = '{run_name}/checkpoints/best-rank{rank}',
     ):
-        super().__init__(folder,
-                        filename,
-                        artifact_name,
-                        latest_filename,
-                        latest_artifact_name,
-                        save_interval,
-                        overwrite=overwrite,
-                        num_checkpoints_to_keep=num_checkpoints_to_keep,
-                        weights_only=weights_only)
+        # Below taken from https://github.com/mosaicml/composer/blob/ff3ad208331140d9cfd898ff24b5c2b222439c51/composer/trainer/trainer.py#L1144-L1163
+        if save_folder is not None:
+            _, _, parsed_save_folder = parse_uri(save_folder)
+
+            # If user passes a URI with s3:// and a bucket_name, but no other
+            # path then we assume they just want their checkpoints saved directly in their
+            # bucket.
+            if parsed_save_folder == '':
+                folder = '.'
+                remote_file_name = save_filename
+                latest_remote_file_name = save_latest_filename
+
+            # If they actually specify a path, then we use that for their local save path
+            # and we prefix save_filename with that path for remote_file_name.
+            else:
+                folder = parsed_save_folder
+                remote_file_name = str(Path(parsed_save_folder) / Path(save_filename))
+                if save_latest_filename is not None:
+                    latest_remote_file_name = str(Path(parsed_save_folder) / Path(save_latest_filename))
+                else:
+                    latest_remote_file_name = None
+
+        super().__init__(
+                folder=folder,
+                filename=save_filename,
+                remote_file_name=remote_file_name,
+                latest_filename=save_latest_filename,
+                latest_remote_file_name=latest_remote_file_name,
+                overwrite=save_overwrite,
+                weights_only=save_weights_only,
+                save_interval=save_interval,
+                num_checkpoints_to_keep=save_num_checkpoints_to_keep,
+            )
 
         self.best_filename = best_filename
         self.best_artifact_name = best_artifact_name
@@ -46,7 +66,7 @@ class BestCheckpointSaver(CheckpointSaver):
         self.maximize = maximize
 
     def _save_checkpoint(self, state, logger, log_level):
-        super()._save_checkpoint(state, logger, log_level)
+        # super()._save_checkpoint(state, logger, log_level)
         
         in_mem_loggers = [logger_destination for logger_destination in logger.destinations 
                 if isinstance(logger_destination, InMemoryLogger)]
@@ -66,46 +86,7 @@ class BestCheckpointSaver(CheckpointSaver):
 
         if is_current_metric_best:
             self.current_best = current_metric_value
-            self._save_best_checkpoint(state, logger, log_level)
-
-
-    def _save_best_checkpoint(self, state, logger: Logger, log_level):
-        formatted_folder_path = format_name_with_dist(self.folder, state.run_name)
-        symlink_name = os.path.join(
-            formatted_folder_path,
-            format_name_with_dist_and_time(
-                self.best_filename,
-                state.run_name,
-                state.timestamp,
-            ).lstrip('/'),
-        )
-        if is_model_deepspeed(state.model) and not is_tar(symlink_name):
-            # Deepspeed requires tarballs; appending `.tar`
-            symlink_name += '.tar'
-        symlink_dirname = os.path.dirname(symlink_name)
-        if symlink_dirname:
-            os.makedirs(symlink_dirname, exist_ok=True)
-        try:
-            os.remove(symlink_name)
-        except FileNotFoundError:
-            pass
-        checkpoint_filepath = os.path.join(format_name_with_dist(self.folder, state.run_name), self.filename)
-        relative_checkpoint_path = os.path.relpath(checkpoint_filepath, formatted_folder_path)
-        os.symlink(relative_checkpoint_path, symlink_name)
-        if self.artifact_name is not None and self.best_artifact_name is not None:
-            symlink_artifact_name = format_name_with_dist_and_time(self.best_artifact_name, state.run_name,
-                                                                    state.timestamp).lstrip('/') + '.symlink'
-            artifact_name = format_name_with_dist_and_time(self.artifact_name, state.run_name,
-                                                            state.timestamp).lstrip('/')
-            with tempfile.TemporaryDirectory() as tmpdir:
-                symlink_filename = os.path.join(tmpdir, 'best.symlink')
-                create_symlink_file(artifact_name, symlink_filename)
-                logger.file_artifact(
-                    log_level=log_level,
-                    artifact_name=symlink_artifact_name,
-                    file_path=symlink_filename,
-                    overwrite=True,
-                )
+            super()._save_checkpoint(state, logger, log_level)
 
 if __name__ == '__main__':
     transform = transforms.Compose([transforms.ToTensor()])
@@ -114,9 +95,7 @@ if __name__ == '__main__':
     eval_dataset = datasets.MNIST("data", train=False, download=True, transform=transform)
     eval_dataloader = DataLoader(eval_dataset, batch_size=128)
 
-
-    osl = ObjectStoreLogger(object_store_cls=S3ObjectStore, object_store_kwargs={'bucket':'evan-mosaic-test'})
-    bcps = BestCheckpointSaver(folder='./cps', save_interval="1ba", overwrite=True)
+    bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/{run_name}/checkpoints', save_interval="1ba", overwrite=True)
     in_mem_logger = InMemoryLogger()
     trainer = Trainer(
         model=mnist_model(num_classes=10),
@@ -125,7 +104,7 @@ if __name__ == '__main__':
         max_duration="3ba",
         eval_interval='1ba',
         callbacks=[bcps],
-        loggers=[in_mem_logger, osl]
+        loggers=[in_mem_logger]
         
     )
     trainer.fit()
