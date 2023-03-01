@@ -59,6 +59,7 @@ class BestCheckpointSaver(CheckpointSaver):
             else:
                 folder = parsed_save_folder
                 remote_file_name = str(Path(parsed_save_folder) / Path(save_filename))
+                print(remote_file_name)
                 if save_latest_filename is not None:
                     latest_remote_file_name = str(Path(parsed_save_folder) / Path(save_latest_filename))
                 else:
