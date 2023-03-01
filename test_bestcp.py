@@ -42,7 +42,7 @@ class BestCheckpointSaver(CheckpointSaver):
     ):
         # Below taken from https://github.com/mosaicml/composer/blob/ff3ad208331140d9cfd898ff24b5c2b222439c51/composer/trainer/trainer.py#L1144-L1163
         if save_folder is not None:
-            _, _, parsed_save_folder = parse_uri(format_name_with_dist(save_folder, state.run_name))
+            _, _, parsed_save_folder = parse_uri(save_folder)
 
             # If user passes a URI with s3:// and a bucket_name, but no other
             # path then we assume they just want their checkpoints saved directly in their
