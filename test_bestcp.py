@@ -86,6 +86,7 @@ class BestCheckpointSaver(CheckpointSaver):
         if self.save_folder is not None:
             remote_ud = maybe_create_remote_uploader_downloader_from_uri(self.save_folder, logger.destinations)
             if remote_ud is not None:
+                print(logger.destinations)
                 logger.destinations = logger.destinations + tuple(remote_ud)
 
 
