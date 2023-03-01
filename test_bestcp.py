@@ -62,6 +62,9 @@ class BestCheckpointSaver(CheckpointSaver):
                 else:
                     latest_remote_file_name = None
 
+        print("file")
+        print(folder)
+        print(remote_file_name)
         super().__init__(
                 folder=folder,
                 filename=save_filename,
