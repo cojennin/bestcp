@@ -44,7 +44,7 @@ class BestCheckpointSaver(CheckpointSaver):
         print("save folder", save_folder)
         if save_folder is not None:
             _, _, parsed_save_folder = parse_uri(save_folder)
-            print("parsed_save_folder", save_folder)
+            print("parsed_save_folder", parsed_save_folder)
 
             # If user passes a URI with s3:// and a bucket_name, but no other
             # path then we assume they just want their checkpoints saved directly in their
