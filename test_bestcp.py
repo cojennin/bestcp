@@ -1,6 +1,10 @@
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
+import logging
+import sys
+
+
 from composer import Trainer
 from composer.models import mnist_model
 from composer.loggers import InMemoryLogger
@@ -9,6 +13,17 @@ from composer.utils import (parse_uri, format_name_with_dist)
 from pathlib import Path
 from typing import Callable, Optional, Union
 from composer.core import (Event, State, Time)
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        # logging.FileHandler("debug.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 class BestCheckpointSaver(CheckpointSaver):
     def __init__(
