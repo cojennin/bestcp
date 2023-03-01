@@ -43,16 +43,16 @@ class BestCheckpointSaver(CheckpointSaver):
 
 
         super().__init__(
-                folder=save_folder,
-                filename=save_filename,
-                remote_file_name=save_filename,
-                latest_filename=save_latest_filename,
-                latest_remote_file_name=save_latest_filename,
-                overwrite=save_overwrite,
-                weights_only=save_weights_only,
-                save_interval=save_interval,
-                num_checkpoints_to_keep=save_num_checkpoints_to_keep,
-            )
+            folder=save_folder,
+            filename=save_filename,
+            remote_file_name=save_filename,
+            latest_filename=save_latest_filename,
+            latest_remote_file_name=save_latest_filename,
+            overwrite=save_overwrite,
+            weights_only=save_weights_only,
+            save_interval=save_interval,
+            num_checkpoints_to_keep=save_num_checkpoints_to_keep,
+        )
 
         self.best_filename = best_filename
         self.best_artifact_name = best_artifact_name
@@ -81,10 +81,7 @@ class BestCheckpointSaver(CheckpointSaver):
 
         if is_current_metric_best:
             self.current_best = current_metric_value
-            # print("save checkpoint")
-            print("save folder")
-            print(self.remote_file_name.folder)
-            print(self.remote_file_name.filename)
+            print("save checkpoint")
             super()._save_checkpoint(state, logger)
 
 if __name__ == '__main__':
