@@ -5,7 +5,7 @@ from composer import Trainer
 from composer.models import mnist_model
 from composer.loggers import InMemoryLogger
 from composer.callbacks import CheckpointSaver
-from composer.utils import (parse_uri)
+from composer.utils import (parse_uri, format_name_with_dist)
 from pathlib import Path
 from typing import Callable, Optional, Union
 from composer.core import (Event, State, Time)
@@ -87,6 +87,7 @@ class BestCheckpointSaver(CheckpointSaver):
         if is_current_metric_best:
             self.current_best = current_metric_value
             print("save checkpoint")
+            print(format_name_with_dist('s3://mosaic-checkpoints/{run_name}/checkpoints', state.run_name))
             super()._save_checkpoint(state, logger)
 
 if __name__ == '__main__':
@@ -96,20 +97,19 @@ if __name__ == '__main__':
     eval_dataset = datasets.MNIST("data", train=False, download=True, transform=transform)
     eval_dataloader = DataLoader(eval_dataset, batch_size=128)
 
-    print('s3://mosaic-checkpoints/{run_name}/checkpoints')
 
-    # bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/{run_name}/checkpoints', save_interval="1ba", save_overwrite=True)
-    # in_mem_logger = InMemoryLogger()
-    # trainer = Trainer(
-    #     model=mnist_model(num_classes=10),
-    #     train_dataloader=train_dataloader,
-    #     eval_dataloader=eval_dataloader,
-    #     max_duration="10ba",
-    #     eval_interval='1ba',
-    #     callbacks=[bcps],
-    #     loggers=[in_mem_logger]
+    bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/{run_name}/checkpoints', save_interval="1ba", save_overwrite=True)
+    in_mem_logger = InMemoryLogger()
+    trainer = Trainer(
+        model=mnist_model(num_classes=10),
+        train_dataloader=train_dataloader,
+        eval_dataloader=eval_dataloader,
+        max_duration="10ba",
+        eval_interval='1ba',
+        callbacks=[bcps],
+        loggers=[in_mem_logger]
         
-    # )
-    # trainer.fit()
+    )
+    trainer.fit()
 
 
