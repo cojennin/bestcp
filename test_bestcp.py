@@ -40,40 +40,14 @@ class BestCheckpointSaver(CheckpointSaver):
         best_filename = 'best-rank{rank}.pt',
         best_artifact_name = '{run_name}/checkpoints/best-rank{rank}',
     ):
-        # Below taken from https://github.com/mosaicml/composer/blob/ff3ad208331140d9cfd898ff24b5c2b222439c51/composer/trainer/trainer.py#L1144-L1163
-        print("save folder", save_folder)
-        if save_folder is not None:
-            _, _, parsed_save_folder = parse_uri(save_folder)
-            print("parsed_save_folder", parsed_save_folder)
 
-            # If user passes a URI with s3:// and a bucket_name, but no other
-            # path then we assume they just want their checkpoints saved directly in their
-            # bucket.
-            if parsed_save_folder == '':
-                folder = '.'
-                remote_file_name = save_filename
-                latest_remote_file_name = save_latest_filename
 
-            # If they actually specify a path, then we use that for their local save path
-            # and we prefix save_filename with that path for remote_file_name.
-            else:
-                folder = parsed_save_folder
-                remote_file_name = str(Path(parsed_save_folder) / Path(save_filename))
-                print(remote_file_name)
-                if save_latest_filename is not None:
-                    latest_remote_file_name = str(Path(parsed_save_folder) / Path(save_latest_filename))
-                else:
-                    latest_remote_file_name = None
-
-        print("file")
-        print(folder)
-        print(remote_file_name)
         super().__init__(
-                folder=folder,
+                folder=save_folder,
                 filename=save_filename,
-                remote_file_name=remote_file_name,
+                remote_file_name=save_filename,
                 latest_filename=save_latest_filename,
-                latest_remote_file_name=latest_remote_file_name,
+                latest_remote_file_name=save_latest_filename,
                 overwrite=save_overwrite,
                 weights_only=save_weights_only,
                 save_interval=save_interval,
