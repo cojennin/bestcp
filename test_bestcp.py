@@ -65,7 +65,7 @@ class BestCheckpointSaver(CheckpointSaver):
         self.current_best = None
         self.maximize = maximize
 
-    def _save_checkpoint(self, state, logger, log_level):
+    def _save_checkpoint(self, state, logger):
         # super()._save_checkpoint(state, logger, log_level)
         
         in_mem_loggers = [logger_destination for logger_destination in logger.destinations 
@@ -86,7 +86,7 @@ class BestCheckpointSaver(CheckpointSaver):
 
         if is_current_metric_best:
             self.current_best = current_metric_value
-            super()._save_checkpoint(state, logger, log_level)
+            super()._save_checkpoint(state, logger)
 
 if __name__ == '__main__':
     transform = transforms.Compose([transforms.ToTensor()])
