@@ -62,9 +62,6 @@ class BestCheckpointSaver(CheckpointSaver):
                 else:
                     latest_remote_file_name = None
 
-        print("save folder")
-        print(parsed_save_folder)
-        print(save_folder)
         super().__init__(
                 folder=folder,
                 filename=save_filename,
@@ -105,6 +102,8 @@ class BestCheckpointSaver(CheckpointSaver):
         if is_current_metric_best:
             self.current_best = current_metric_value
             # print("save checkpoint")
+            print("save folder")
+            print(self.remote_file_name)
             super()._save_checkpoint(state, logger)
 
 if __name__ == '__main__':
