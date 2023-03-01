@@ -113,17 +113,18 @@ if __name__ == '__main__':
     eval_dataloader = DataLoader(eval_dataset, batch_size=128)
 
 
-    bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints', save_interval="1ba", save_overwrite=True)
+    # bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints', save_interval="1ba", save_overwrite=True)
     in_mem_logger = InMemoryLogger()
     trainer = Trainer(
         model=mnist_model(num_classes=10),
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
+        save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints'
         max_duration="3ba",
         eval_interval='1ba',
-        callbacks=[bcps],
-        log_to_console=True,
-        loggers=[in_mem_logger]
+        # callbacks=[bcps],
+        # log_to_console=True,
+        # loggers=[in_mem_logger]
         
     )
     trainer.fit()
