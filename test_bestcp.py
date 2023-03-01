@@ -4,7 +4,6 @@ from torch.utils.data import DataLoader
 import logging
 import sys
 
-
 from composer import Trainer
 from composer.models import mnist_model
 from composer.loggers import InMemoryLogger, Logger
@@ -13,17 +12,6 @@ from composer.utils import (parse_uri, maybe_create_remote_uploader_downloader_f
 from pathlib import Path
 from typing import Callable, Optional, Union
 from composer.core import (Event, State, Time)
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        # logging.FileHandler("debug.log"),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-
-# logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 class BestCheckpointSaver(CheckpointSaver):
     def __init__(
@@ -38,6 +26,8 @@ class BestCheckpointSaver(CheckpointSaver):
         save_weights_only: bool = False,
         save_num_checkpoints_to_keep: int = -1,
     ):
+        # Pulling from https://github.com/mosaicml/composer/blob/v0.12.1/composer/trainer/trainer.py#L1138
+        # Seemed a good idea to follow the same logical path
         latest_remote_file_name = None
         if save_folder is not None:
             _, _, parsed_save_folder = parse_uri(save_folder)
@@ -60,7 +50,6 @@ class BestCheckpointSaver(CheckpointSaver):
                 else:
                     latest_remote_file_name = None
 
-        print(folder, save_filename, remote_file_name,)
         super().__init__(
             folder=folder,
             filename=save_filename,
@@ -78,9 +67,11 @@ class BestCheckpointSaver(CheckpointSaver):
         self.current_best = None
         self.maximize = maximize
     
+    # This normally happens inside the __init__ of Trainer, but managing it here
     def init(self, state: State, logger: Logger) -> None:
         if self.save_folder is not None:
             remote_ud = maybe_create_remote_uploader_downloader_from_uri(self.save_folder, logger.destinations)
+            # Initing inside an "init" event, so RemoteUploaderDownloader init won't trigger, so trigger it manually
             remote_ud.init(state, logger)
             if remote_ud is not None:
                 logger.destinations += (remote_ud,)
@@ -104,7 +95,6 @@ class BestCheckpointSaver(CheckpointSaver):
             is_current_metric_best = current_metric_value <= self.current_best
 
         if is_current_metric_best:
-            print("SAVING BEST")
             self.current_best = current_metric_value
             super()._save_checkpoint(state, logger)
 
@@ -116,7 +106,7 @@ if __name__ == '__main__':
     eval_dataloader = DataLoader(eval_dataset, batch_size=128)
 
 
-    bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints', save_interval="1ba", save_overwrite=True)
+    bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/{run_name}/checkpoints', save_interval="1ba", save_overwrite=True)
     in_mem_logger = InMemoryLogger()
     trainer = Trainer(
         model=mnist_model(num_classes=10),
@@ -129,5 +119,3 @@ if __name__ == '__main__':
         
     )
     trainer.fit()
-
-
