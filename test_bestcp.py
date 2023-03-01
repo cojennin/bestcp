@@ -104,6 +104,7 @@ class BestCheckpointSaver(CheckpointSaver):
             is_current_metric_best = current_metric_value <= self.current_best
 
         if is_current_metric_best:
+            print("SAVING BEST")
             self.current_best = current_metric_value
             super()._save_checkpoint(state, logger)
 
@@ -122,7 +123,7 @@ if __name__ == '__main__':
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
         # save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints',
-        max_duration="3ba",
+        max_duration="10",
         eval_interval='1ba',
         callbacks=[bcps],
         # log_to_console=True,
