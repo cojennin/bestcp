@@ -41,13 +41,35 @@ class BestCheckpointSaver(CheckpointSaver):
         best_artifact_name = '{run_name}/checkpoints/best-rank{rank}',
     ):
 
+        latest_remote_file_name = None
+        if save_folder is not None:
+            _, _, parsed_save_folder = parse_uri(save_folder)
 
+            # If user passes a URI with s3:// and a bucket_name, but no other
+            # path then we assume they just want their checkpoints saved directly in their
+            # bucket.
+            if parsed_save_folder == '':
+                folder = '.'
+                remote_file_name = save_filename
+                latest_remote_file_name = save_latest_filename
+
+            # If they actually specify a path, then we use that for their local save path
+            # and we prefix save_filename with that path for remote_file_name.
+            else:
+                folder = parsed_save_folder
+                remote_file_name = str(Path(parsed_save_folder) / Path(save_filename))
+                if save_latest_filename is not None:
+                    latest_remote_file_name = str(Path(parsed_save_folder) / Path(save_latest_filename))
+                else:
+                    latest_remote_file_name = None
+
+        print(folder, save_filename, remote_file_name,)
         super().__init__(
-            folder=save_folder,
+            folder=folder,
             filename=save_filename,
-            remote_file_name=save_filename,
+            remote_file_name=remote_file_name,
             latest_filename=save_latest_filename,
-            latest_remote_file_name=save_latest_filename,
+            latest_remote_file_name=latest_remote_file_name,
             overwrite=save_overwrite,
             weights_only=save_weights_only,
             save_interval=save_interval,
@@ -81,7 +103,6 @@ class BestCheckpointSaver(CheckpointSaver):
 
         if is_current_metric_best:
             self.current_best = current_metric_value
-            print("save checkpoint")
             super()._save_checkpoint(state, logger)
 
 if __name__ == '__main__':
