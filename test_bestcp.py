@@ -13,6 +13,15 @@ from pathlib import Path
 from typing import Callable, Optional, Union
 from composer.core import (Event, State, Time)
 
+# For debugging, to remove before sending
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 class BestCheckpointSaver(CheckpointSaver):
     def __init__(
         self,
@@ -20,14 +29,13 @@ class BestCheckpointSaver(CheckpointSaver):
         maximize=True,
         save_folder: Optional[str] = None,
         save_filename: str = 'best-rank{rank}.pt',
-        save_latest_filename: Optional[str] = 'latest-rank{rank}.pt',
         save_overwrite: bool = False,
         save_interval: Union[str, int, Time, Callable[[State, Event], bool]] = '1ep',
         save_weights_only: bool = False,
         save_num_checkpoints_to_keep: int = -1,
     ):
         # Pulling from https://github.com/mosaicml/composer/blob/v0.12.1/composer/trainer/trainer.py#L1138
-        # Seemed a good idea to follow the same logical path
+        # Seemed a good idea to follow the same logic
         latest_remote_file_name = None
         if save_folder is not None:
             _, _, parsed_save_folder = parse_uri(save_folder)
@@ -38,24 +46,19 @@ class BestCheckpointSaver(CheckpointSaver):
             if parsed_save_folder == '':
                 folder = '.'
                 remote_file_name = save_filename
-                latest_remote_file_name = save_latest_filename
 
             # If they actually specify a path, then we use that for their local save path
             # and we prefix save_filename with that path for remote_file_name.
             else:
                 folder = parsed_save_folder
                 remote_file_name = str(Path(parsed_save_folder) / Path(save_filename))
-                if save_latest_filename is not None:
-                    latest_remote_file_name = str(Path(parsed_save_folder) / Path(save_latest_filename))
-                else:
-                    latest_remote_file_name = None
 
         super().__init__(
             folder=folder,
             filename=save_filename,
             remote_file_name=remote_file_name,
-            latest_filename=save_latest_filename,
-            latest_remote_file_name=latest_remote_file_name,
+            latest_filename=None,
+            latest_remote_file_name=None,
             overwrite=save_overwrite,
             weights_only=save_weights_only,
             save_interval=save_interval,
