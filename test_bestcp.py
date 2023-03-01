@@ -86,6 +86,7 @@ class BestCheckpointSaver(CheckpointSaver):
 
         if is_current_metric_best:
             self.current_best = current_metric_value
+            print("save checkpoint")
             super()._save_checkpoint(state, logger)
 
 if __name__ == '__main__':
