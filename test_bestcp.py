@@ -64,6 +64,7 @@ class BestCheckpointSaver(CheckpointSaver):
 
         print("save folder")
         print(parsed_save_folder)
+        print(save_folder)
         super().__init__(
                 folder=folder,
                 filename=save_filename,
