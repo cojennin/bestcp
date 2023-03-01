@@ -109,7 +109,8 @@ class BestCheckpointSaver(CheckpointSaver):
             self.current_best = current_metric_value
             # print("save checkpoint")
             print("save folder")
-            print(self.remote_file_name)
+            print(self.remote_file_name.folder)
+            print(self.remote_file_name.filename)
             super()._save_checkpoint(state, logger)
 
 if __name__ == '__main__':
