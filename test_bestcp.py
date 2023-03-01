@@ -75,6 +75,7 @@ class BestCheckpointSaver(CheckpointSaver):
             num_checkpoints_to_keep=save_num_checkpoints_to_keep,
         )
 
+        self.save_folder = save_folder
         self.best_filename = best_filename
         self.best_artifact_name = best_artifact_name
         self.metric_name = metric_name
