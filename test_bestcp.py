@@ -7,7 +7,7 @@ import sys
 
 from composer import Trainer
 from composer.models import mnist_model
-from composer.loggers import InMemoryLogger
+from composer.loggers import InMemoryLogger, Logger
 from composer.callbacks import CheckpointSaver
 from composer.utils import (parse_uri, maybe_create_remote_uploader_downloader_from_uri)
 from pathlib import Path
@@ -40,11 +40,6 @@ class BestCheckpointSaver(CheckpointSaver):
         best_filename = 'best-rank{rank}.pt',
         best_artifact_name = '{run_name}/checkpoints/best-rank{rank}',
     ):
-        if save_folder is not None:
-            remote_ud = maybe_create_remote_uploader_downloader_from_uri(save_folder, self.logger.destinations)
-            if remote_ud is not None:
-                self.logger.destinations.append(remote_ud)
-
         latest_remote_file_name = None
         if save_folder is not None:
             _, _, parsed_save_folder = parse_uri(save_folder)
@@ -85,6 +80,13 @@ class BestCheckpointSaver(CheckpointSaver):
         self.metric_name = metric_name
         self.current_best = None
         self.maximize = maximize
+    
+    def init(self, state: State, logger: Logger) -> None:
+        if self.save_folder is not None:
+            remote_ud = maybe_create_remote_uploader_downloader_from_uri(self.save_folder, self.logger.destinations)
+            if remote_ud is not None:
+                self.logger.destinations.append(remote_ud)
+
 
     def _save_checkpoint(self, state, logger):
 
