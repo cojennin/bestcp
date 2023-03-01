@@ -31,14 +31,12 @@ class BestCheckpointSaver(CheckpointSaver):
         metric_name='metrics/eval/Accuracy',
         maximize=True,
         save_folder: Optional[str] = None,
-        save_filename: str = 'ep{epoch}-ba{batch}-rank{rank}.pt',
+        save_filename: str = 'best-rank{rank}.pt',
         save_latest_filename: Optional[str] = 'latest-rank{rank}.pt',
         save_overwrite: bool = False,
         save_interval: Union[str, int, Time, Callable[[State, Event], bool]] = '1ep',
         save_weights_only: bool = False,
         save_num_checkpoints_to_keep: int = -1,
-        best_filename = 'best-rank{rank}.pt',
-        best_artifact_name = '{run_name}/checkpoints/best-rank{rank}',
     ):
         latest_remote_file_name = None
         if save_folder is not None:
@@ -76,8 +74,6 @@ class BestCheckpointSaver(CheckpointSaver):
         )
 
         self.save_folder = save_folder
-        self.best_filename = best_filename
-        self.best_artifact_name = best_artifact_name
         self.metric_name = metric_name
         self.current_best = None
         self.maximize = maximize
@@ -87,15 +83,10 @@ class BestCheckpointSaver(CheckpointSaver):
             remote_ud = maybe_create_remote_uploader_downloader_from_uri(self.save_folder, logger.destinations)
             remote_ud.init(state, logger)
             if remote_ud is not None:
-                print(logger.destinations)
                 logger.destinations += (remote_ud,)
 
 
     def _save_checkpoint(self, state, logger):
-        print(self.remote_file_name)
-
-        # super()._save_checkpoint(state, logger, log_level)
-        
         in_mem_loggers = [logger_destination for logger_destination in logger.destinations 
                 if isinstance(logger_destination, InMemoryLogger)]
         if in_mem_loggers:
