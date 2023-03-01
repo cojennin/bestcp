@@ -87,7 +87,6 @@ class BestCheckpointSaver(CheckpointSaver):
         if is_current_metric_best:
             self.current_best = current_metric_value
             print("save checkpoint")
-            print(format_name_with_dist('s3://mosaic-checkpoints/{run_name}/checkpoints', state.run_name))
             super()._save_checkpoint(state, logger)
 
 if __name__ == '__main__':
@@ -104,9 +103,10 @@ if __name__ == '__main__':
         model=mnist_model(num_classes=10),
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
-        max_duration="10ba",
+        max_duration="3ba",
         eval_interval='1ba',
         callbacks=[bcps],
+        log_to_console=True,
         loggers=[in_mem_logger]
         
     )
