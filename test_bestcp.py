@@ -98,18 +98,18 @@ if __name__ == '__main__':
 
     print('s3://mosaic-checkpoints/{run_name}/checkpoints')
 
-    bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/{run_name}/checkpoints', save_interval="1ba", save_overwrite=True)
-    in_mem_logger = InMemoryLogger()
-    trainer = Trainer(
-        model=mnist_model(num_classes=10),
-        train_dataloader=train_dataloader,
-        eval_dataloader=eval_dataloader,
-        max_duration="10ba",
-        eval_interval='1ba',
-        callbacks=[bcps],
-        loggers=[in_mem_logger]
+    # bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/{run_name}/checkpoints', save_interval="1ba", save_overwrite=True)
+    # in_mem_logger = InMemoryLogger()
+    # trainer = Trainer(
+    #     model=mnist_model(num_classes=10),
+    #     train_dataloader=train_dataloader,
+    #     eval_dataloader=eval_dataloader,
+    #     max_duration="10ba",
+    #     eval_interval='1ba',
+    #     callbacks=[bcps],
+    #     loggers=[in_mem_logger]
         
-    )
-    trainer.fit()
+    # )
+    # trainer.fit()
 
 
