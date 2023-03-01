@@ -95,7 +95,7 @@ if __name__ == '__main__':
     eval_dataset = datasets.MNIST("data", train=False, download=True, transform=transform)
     eval_dataloader = DataLoader(eval_dataset, batch_size=128)
 
-    bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/{run_name}/checkpoints', save_interval="1ba", overwrite=True)
+    bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/{run_name}/checkpoints', save_interval="1ba", save_overwrite=True)
     in_mem_logger = InMemoryLogger()
     trainer = Trainer(
         model=mnist_model(num_classes=10),
