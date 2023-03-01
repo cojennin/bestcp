@@ -122,11 +122,9 @@ if __name__ == '__main__':
         model=mnist_model(num_classes=10),
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
-        # save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints',
-        max_duration="10",
+        max_duration="10ba",
         eval_interval='1ba',
         callbacks=[bcps],
-        # log_to_console=True,
         loggers=[in_mem_logger]
         
     )
