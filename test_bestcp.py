@@ -40,6 +40,10 @@ class BestCheckpointSaver(CheckpointSaver):
         best_filename = 'best-rank{rank}.pt',
         best_artifact_name = '{run_name}/checkpoints/best-rank{rank}',
     ):
+        if save_folder is not None:
+            remote_ud = super().maybe_create_remote_uploader_downloader_from_uri(save_folder, self.logger.destinations)
+            if remote_ud is not None:
+                self.logger.destinations.append(remote_ud)
 
         latest_remote_file_name = None
         if save_folder is not None:
@@ -83,6 +87,7 @@ class BestCheckpointSaver(CheckpointSaver):
         self.maximize = maximize
 
     def _save_checkpoint(self, state, logger):
+
         # super()._save_checkpoint(state, logger, log_level)
         
         in_mem_loggers = [logger_destination for logger_destination in logger.destinations 
@@ -113,18 +118,18 @@ if __name__ == '__main__':
     eval_dataloader = DataLoader(eval_dataset, batch_size=128)
 
 
-    # bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints', save_interval="1ba", save_overwrite=True)
+    bcps = BestCheckpointSaver(save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints', save_interval="1ba", save_overwrite=True)
     in_mem_logger = InMemoryLogger()
     trainer = Trainer(
         model=mnist_model(num_classes=10),
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
-        save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints',
+        # save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints',
         max_duration="3ba",
         eval_interval='1ba'
-        # callbacks=[bcps],
+        callbacks=[bcps],
         # log_to_console=True,
-        # loggers=[in_mem_logger]
+        loggers=[in_mem_logger]
         
     )
     trainer.fit()
