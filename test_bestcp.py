@@ -91,6 +91,7 @@ class BestCheckpointSaver(CheckpointSaver):
 
 
     def _save_checkpoint(self, state, logger):
+        print(self.remote_file_name)
 
         # super()._save_checkpoint(state, logger, log_level)
         
