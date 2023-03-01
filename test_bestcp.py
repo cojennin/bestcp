@@ -9,7 +9,7 @@ from composer import Trainer
 from composer.models import mnist_model
 from composer.loggers import InMemoryLogger
 from composer.callbacks import CheckpointSaver
-from composer.utils import (parse_uri, format_name_with_dist)
+from composer.utils import (parse_uri, maybe_create_remote_uploader_downloader_from_uri)
 from pathlib import Path
 from typing import Callable, Optional, Union
 from composer.core import (Event, State, Time)
@@ -41,7 +41,7 @@ class BestCheckpointSaver(CheckpointSaver):
         best_artifact_name = '{run_name}/checkpoints/best-rank{rank}',
     ):
         if save_folder is not None:
-            remote_ud = super().maybe_create_remote_uploader_downloader_from_uri(save_folder, self.logger.destinations)
+            remote_ud = maybe_create_remote_uploader_downloader_from_uri(save_folder, self.logger.destinations)
             if remote_ud is not None:
                 self.logger.destinations.append(remote_ud)
 
@@ -126,7 +126,7 @@ if __name__ == '__main__':
         eval_dataloader=eval_dataloader,
         # save_folder='s3://mosaic-checkpoints/my-run-name/checkpoints',
         max_duration="3ba",
-        eval_interval='1ba'
+        eval_interval='1ba',
         callbacks=[bcps],
         # log_to_console=True,
         loggers=[in_mem_logger]
